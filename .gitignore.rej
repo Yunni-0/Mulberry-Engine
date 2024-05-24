@@ -1,0 +1,13 @@
+diff a/.gitignore b/.gitignore	(rejected hunks)
+@@ -1,5 +1,10 @@
+  main
+  main.exe
+++<<<<<<< HEAD
+ +build
+- dist
+++dist
+++=======
++ build/*
+ -dist/*
+++dist/*
+++>>>>>>> 0c538be (Moving cameras!)
