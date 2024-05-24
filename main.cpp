@@ -23,6 +23,20 @@
 float mix = 0.0f;
 float screenWidth = 800.0f;
 float screenHeight = 800.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraRight = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cameraFront);
+glm::vec3 cameraUp = glm::cross(cameraFront, cameraRight);
+glm::vec3 cameraSpeed = glm::vec3(0.0f);
+float topSpeed = 20.0f;
+float acceleration = 0.5f;
+float deceleration = 0.1f;
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+double lastCursorX = 400.0;
+double lastCursorY = 400.0;
+float pitch = 0.0f;
+float yaw = -90.0f;
 
 namespace math {
     template <typename T>
@@ -45,17 +59,61 @@ void resizeCallback(GLFWwindow *window, int width, int height) {
     screenHeight = height;
 }
 
+void cursorCallback(GLFWwindow *window, double xPos, double yPos) {
+    float deltaX = xPos - lastCursorX;
+    float deltaY = yPos - lastCursorY;
+    lastCursorX = xPos;
+    lastCursorY = yPos;
+
+    float sensitivity = 100.0f;
+    deltaX *= sensitivity * deltaTime;
+    deltaY *= sensitivity * deltaTime;
+
+    yaw += deltaX;
+    pitch += deltaY;
+
+    if (pitch > 89.0f) {
+        pitch = 89.0f;
+    }
+    if (pitch < -89.0f) {
+        pitch = -89.0f;
+    }
+}
+
 void processInput(GLFWwindow *window) {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
     }
     
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
-        mix += 0.1;
+        if (glm::length(cameraSpeed * cameraFront) < topSpeed) {
+            cameraSpeed += acceleration * cameraFront;
+        }
     }
     
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
-        mix -= 0.1;
+        if (glm::length(cameraSpeed * cameraFront) < topSpeed) {
+            cameraSpeed -= acceleration * cameraFront;
+        }
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
+        if (glm::length(cameraSpeed * cameraRight) < topSpeed) {
+            cameraSpeed -= acceleration * cameraRight;
+        }
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
+        if (glm::length(cameraSpeed * cameraRight) < topSpeed) {
+            cameraSpeed += acceleration * cameraRight;
+        }
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE) {
+        if (glm::length(cameraSpeed) >= deceleration) {
+            printf("speed: %f\n", glm::length(cameraSpeed));
+            cameraSpeed -= acceleration * glm::normalize(cameraSpeed);
+        }
     }
     
     mix = math::clamp<float>(mix, 0.0, 1.0);
@@ -79,6 +137,11 @@ int main(int argc, char** argv) {
         glfwTerminate();
         return -1;
     }
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, cursorCallback);
+
+    glfwGetCursorPos(window, &lastCursorX, &lastCursorY);
     
     glfwMakeContextCurrent(window);
     
@@ -212,11 +275,6 @@ int main(int argc, char** argv) {
     
     stbi_image_free(data);
     
-    glm::mat4 view = glm::mat4(1.0f);
-    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-    glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), screenWidth/screenHeight, 0.1f, 100.0f);
-    
     shader.use();
     shader.setInt("texture1", 0);
     shader.setInt("texture2", 1);
@@ -224,8 +282,27 @@ int main(int argc, char** argv) {
     glEnable(GL_DEPTH_TEST);
     
     while (!glfwWindowShouldClose(window)) {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
+        if (glm::length(cameraSpeed) >= topSpeed) {
+            cameraSpeed -= deceleration * glm::normalize(cameraSpeed);
+        } 
+
         processInput(window);
+
+        cameraPos += cameraSpeed * deltaTime;
+
+        cameraFront = glm::normalize(glm::vec3(cos(glm::radians(yaw)) * cos(glm::radians(pitch)), sin(glm::radians(pitch)), sin(glm::radians(yaw)) * cos(glm::radians(pitch))));
+        cameraRight = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cameraFront));
+
+        glm::mat4 view = glm::mat4(1.0f);
+        view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         
+        glm::mat4 projection = glm::mat4(1.0f);
+        projection = glm::perspective(glm::radians(45.0f), screenWidth/screenHeight, 0.1f, 100.0f);
+
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
         
         shader.use();
@@ -240,8 +317,8 @@ int main(int argc, char** argv) {
         
         for (int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
-            glm::translate(model, positions[i]);
-            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(0.5f, 1.0f, 0.0f));
+            model = glm::translate(model, positions[i]);
+            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
             
             shader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
