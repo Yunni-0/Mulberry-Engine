@@ -116,6 +116,9 @@ public:
     void setVec3(const char* name, float x, float y, float z) const {
         glUniform3f(glGetUniformLocation(ID, name), x, y, z);
     }
+    void setVec3(const char* name, glm::vec3 value) {
+        glUniform3f(glGetUniformLocation(ID, name), value.x, value.y, value.z);
+    }
 };
 
 #endif /* SHADER_H */

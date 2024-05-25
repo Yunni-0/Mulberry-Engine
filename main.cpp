@@ -59,7 +59,7 @@ void cursorCallback(GLFWwindow *window, double xPos, double yPos) {
     deltaY *= sensitivity * deltaTime;
 
     camera.yaw += deltaX;
-    camera.pitch += deltaY;
+    camera.pitch -= deltaY;
 
     if (camera.pitch > 89.0f) {
         camera.pitch = 89.0f;
@@ -76,32 +76,32 @@ void processInput(GLFWwindow *window) {
     
     if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
         if (glm::length(camera.cameraSpeed * camera.cameraFront) < camera.topSpeed) {
-            camera.cameraSpeed += camera.acceleration * camera.cameraFront;
+            camera.cameraSpeed += camera.acceleration * camera.cameraFront * deltaTime;
         }
     }
     
     if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
         if (glm::length(camera.cameraSpeed * camera.cameraFront) < camera.topSpeed) {
-            camera.cameraSpeed -= camera.acceleration * camera.cameraFront;
+            camera.cameraSpeed -= camera.acceleration * camera.cameraFront * deltaTime;
         }
     }
 
     if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS) {
         if (glm::length(camera.cameraSpeed * camera.cameraRight) < camera.topSpeed) {
-            camera.cameraSpeed -= camera.acceleration * camera.cameraRight;
+            camera.cameraSpeed -= camera.acceleration * camera.cameraRight * deltaTime;
         }
     }
     
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS) {
         if (glm::length(camera.cameraSpeed * camera.cameraRight) < camera.topSpeed) {
-            camera.cameraSpeed += camera.acceleration * camera.cameraRight;
+            camera.cameraSpeed += camera.acceleration * camera.cameraRight * deltaTime;
         }
     }
 
     if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_UP) == GLFW_RELEASE) {
-        if (glm::length(camera.cameraSpeed) >= camera.deceleration) {
+        if (glm::length(camera.cameraSpeed) > 0) {
             printf("speed: %f\n", glm::length(camera.cameraSpeed));
-            camera.cameraSpeed -= camera.acceleration * glm::normalize(camera.cameraSpeed);
+            camera.cameraSpeed -= camera.deceleration * glm::normalize(camera.cameraSpeed) * deltaTime;
         }
     }
 }
@@ -139,42 +139,47 @@ int main(int argc, char** argv) {
     }
     
     float verticies[] = {
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, 0.5f,
-        0.5f, -0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, -0.5f,
-        0.5f, 0.5f, 0.5f,
-        0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, 0.5f,
-        -0.5f, 0.5f, -0.5f
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
+        
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
+        
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
+        
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
+        
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f,  0.0f, -1.0f, 0.0f,
+        0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
+        
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
     };
     
     Shader lighting("shader.vert", "lighting.frag");
@@ -182,7 +187,7 @@ int main(int argc, char** argv) {
     
     unsigned int lightVAO;
     glGenVertexArrays(1, &lightVAO);
-    
+
     glViewport(0, 0, 800, 800);
     
     glfwSetFramebufferSizeCallback(window, resizeCallback);
@@ -196,16 +201,14 @@ int main(int argc, char** argv) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
     
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 6, (void*)(sizeof(float) * 3));
+    glEnableVertexAttribArray(1);
     
     glEnable(GL_DEPTH_TEST);
     
     glm::vec3 lightCubePos = glm::vec3(1.2f, 1.0f, 0.2f);
-
-    lighting.use();
-    lighting.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
-    lighting.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -227,6 +230,10 @@ int main(int argc, char** argv) {
         glBindVertexArray(lightVAO);
 
         lighting.use();
+        lighting.setVec3("objectColor", 1.0f, 0.5f, 0.31f);
+        lighting.setVec3("lightColor", 1.0f, 1.0f, 1.0f);
+        lighting.setVec3("lightPos", lightCubePos);
+        lighting.setVec3("cameraPos", camera.cameraPos);
         lighting.setMat4("view", view);
         lighting.setMat4("projection", projection);
         
