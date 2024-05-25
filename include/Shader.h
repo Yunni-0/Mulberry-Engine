@@ -19,8 +19,8 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
-#include "../glm/gtc/type_ptr.hpp"
-#include "../glm/gtc/matrix_transform.hpp"
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 class Shader
 {
@@ -112,6 +112,9 @@ public:
     }
     void setMat4(const char* name, glm::mat4 value) const {
         glUniformMatrix4fv(glGetUniformLocation(ID, name), 1, GL_FALSE, glm::value_ptr(value));
+    }
+    void setVec3(const char* name, float x, float y, float z) const {
+        glUniform3f(glGetUniformLocation(ID, name), x, y, z);
     }
 };
 

@@ -25,7 +25,8 @@ public:
     void run(float deltaTime) {
         cameraPos += cameraSpeed * deltaTime;
 
-        cameraFront = glm::normalize(glm::vec3(cos(glm::radians(yaw)) * cos(glm::radians(pitch)), sin(glm::radians(pitch)), sin(glm::radians(yaw)) * cos(glm::radians(pitch))));
+        //cameraFront = glm::normalize(glm::vec3(cos(glm::radians(yaw)) * cos(glm::radians(pitch)), sin(glm::radians(pitch)), sin(glm::radians(yaw)) * cos(glm::radians(pitch))));
+        cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
         cameraRight = glm::normalize(glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cameraFront));
     }
 };
