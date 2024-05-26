@@ -2,27 +2,39 @@
 out vec4 fragmentColor;
 in vec3 normal;
 in vec3 pos;
+in vec2 texCoord;
 
-uniform vec3 objectColor;
-uniform vec3 lightColor;
-uniform vec3 lightPos;
+struct Mat {
+    sampler2D diffuse;
+    sampler2D specular;
+    float shininess;
+};
+
+struct Light {
+    vec3 pos;
+
+    vec3 diffuse;
+    vec3 specular;
+    vec3 ambient;
+};
+
+uniform Mat material;
+uniform Light light;
 uniform vec3 cameraPos;
 
 void main () {
     vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(lightPos - pos);
+    vec3 lightDir = normalize(light.pos - pos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuseLight = diff * lightColor;
+    vec3 diffuseLight = (diff * vec3(texture(material.diffuse, texCoord))) * light.diffuse;
 
-    float specularStrength = 0.5;
     vec3 viewDir = normalize(cameraPos - pos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specularLight = specularStrength * spec * lightColor;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    vec3 specularLight = (vec3(texture(material.specular, texCoord)) * spec) * light.specular;
 
-    float ambientStrength = 0.1f;
-    vec3 ambientLight = lightColor * ambientStrength;
+    vec3 ambientLight = light.ambient * vec3(texture(material.diffuse, texCoord));
 
-    vec3 result = objectColor * (ambientLight + diffuseLight + specularLight);
+    vec3 result = ambientLight + diffuseLight + specularLight;
     fragmentColor = vec4(result, 1.0);
 }
