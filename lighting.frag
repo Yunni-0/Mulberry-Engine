@@ -11,7 +11,7 @@ struct Mat {
 };
 
 struct Light {
-    vec3 pos;
+    vec4 pos;
 
     vec3 diffuse;
     vec3 specular;
@@ -24,7 +24,21 @@ uniform vec3 cameraPos;
 
 void main () {
     vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(light.pos - pos);
+    vec3 lightDir;
+    float attenuation;
+
+    if (light.pos.w == 0.0) {
+        attenuation = 1.0;
+        lightDir = normalize(vec3(-light.pos));
+    }
+    
+    else if (light.pos.w == 1.0) {
+        float distance = length(vec3(light.pos) - pos);
+        attenuation = 1.0/(1.0+0.09*distance*0.032*(distance*distance));
+
+        lightDir = normalize(vec3(light.pos) - pos);
+    }
+
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuseLight = (diff * vec3(texture(material.diffuse, texCoord))) * light.diffuse;
 
@@ -35,6 +49,6 @@ void main () {
 
     vec3 ambientLight = light.ambient * vec3(texture(material.diffuse, texCoord));
 
-    vec3 result = ambientLight + diffuseLight + specularLight;
+    vec3 result = (ambientLight + diffuseLight + specularLight) * attenuation;
     fragmentColor = vec4(result, 1.0);
 }

@@ -181,6 +181,19 @@ int main(int argc, char** argv) {
         -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  1.0f
     };
+
+    glm::vec3 cubePositions[] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f)
+    };
     
     Shader lighting("shader.vert", "lighting.frag");
     Shader lightCube("shader.vert", "lightCube.frag");
@@ -253,6 +266,7 @@ int main(int argc, char** argv) {
     glEnable(GL_DEPTH_TEST);
     
     glm::vec3 lightCubePos = glm::vec3(1.2f, 1.0f, 0.2f);
+    //glm::vec3 lightCubePos = glm::vec3(-0.2f, -1.0f, -0.3f);
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = glfwGetTime();
@@ -284,28 +298,30 @@ int main(int argc, char** argv) {
         lighting.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
         lighting.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
         lighting.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
-        lighting.setVec3("light.pos", lightCubePos);
+        lighting.setVec4("light.pos", glm::vec4(lightCubePos, 1.0f));
         lighting.setVec3("cameraPos", camera.cameraPos);
         lighting.setMat4("view", view);
         lighting.setMat4("projection", projection);
-        
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, glm::radians(0.0f), glm::vec3(1.0f, 0.3f, 0.5f));
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
 
-        lighting.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePositions[i]);
+            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
+
+            lighting.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
 
         lightCube.use();
         lightCube.setMat4("view", view);
         lightCube.setMat4("projection", projection);
 
-        model = glm::mat4(1.0f);
+        glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, lightCubePos);
         model = glm::scale(model, glm::vec3(0.2f));
 

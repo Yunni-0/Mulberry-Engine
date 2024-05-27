@@ -119,6 +119,12 @@ public:
     void setVec3(const char* name, glm::vec3 value) {
         glUniform3f(glGetUniformLocation(ID, name), value.x, value.y, value.z);
     }
+    void setVec4(const char* name, float x, float y, float z, float w) const {
+        glUniform4f(glGetUniformLocation(ID, name), x, y, z, w);
+    }
+    void setVec4(const char* name, glm::vec4 value) {
+        glUniform4f(glGetUniformLocation(ID, name), value.x, value.y, value.z, value.w);
+    }
 };
 
 #endif /* SHADER_H */
