@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <Shader.h>
+#include <stb_image.h>
 
 struct Vertex {
     glm::vec3 pos;
@@ -15,7 +16,47 @@ struct Vertex {
 struct Texture {
     unsigned int ID;
     std::string type;
+    std::string name;
 };
+
+unsigned int TextureFromFile(const char *fileName, const char *directory) {
+    std::string path = std::string(fileName) + std::string(directory);
+    
+    unsigned int tex;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_2D, tex);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+    int format;
+    if (nrChannels == 1) {
+        format = GL_RED;
+    }
+    else if (nrChannels == 3) {
+        format = GL_RGB;
+    }
+    else if (nrChannels == 4) {
+        format = GL_RGBA;
+    }
+    else {
+        printf("Could not load texture %s since it has an unusual amount of channels", path);
+        return tex;
+    }
+
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+    }
+
+    else {
+        printf("Could not load texture %s", path);
+    }
+}
 
 class Mesh {
     public:
