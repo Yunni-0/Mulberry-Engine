@@ -56,6 +56,8 @@ unsigned int TextureFromFile(const char *fileName, const char *directory) {
     else {
         printf("Could not load texture %s", path);
     }
+
+    return tex;
 }
 
 class Mesh {

@@ -4,12 +4,6 @@ in vec3 normal;
 in vec3 pos;
 in vec2 texCoord;
 
-struct Mat {
-    sampler2D diffuse;
-    sampler2D specular;
-    float shininess;
-};
-
 struct Light {
     vec4 pos;
 
@@ -18,7 +12,8 @@ struct Light {
     vec3 ambient;
 };
 
-uniform Mat material;
+uniform sampler2D texture_specular1;
+uniform sampler2D texture_diffuse1;
 uniform Light light;
 uniform vec3 cameraPos;
 

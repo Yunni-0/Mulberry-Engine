@@ -20,6 +20,8 @@
 #include "glm/gtc/type_ptr.hpp"
 #include <algorithm>
 #include <Camera.h>
+#include <Light.h>
+#include <Model.h>
 
 float screenWidth = 800.0f;
 float screenHeight = 800.0f;
@@ -196,72 +198,14 @@ int main(int argc, char** argv) {
     };
     
     Shader lighting("shader.vert", "lighting.frag");
-    Shader lightCube("shader.vert", "lightCube.frag");
-    
-    unsigned int lightVAO;
-    glGenVertexArrays(1, &lightVAO);
+
+    Model model("Mulberry.fbx");
 
     glViewport(0, 0, 800, 800);
     
     glfwSetFramebufferSizeCallback(window, resizeCallback);
     
     glClearColor(0.5f, 0.0f, 0.7f, 1.0f);
-    
-    glBindVertexArray(lightVAO);
-    
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticies), verticies, GL_STATIC_DRAW);
-    
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 3));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 8, (void*)(sizeof(float) * 6));
-    glEnableVertexAttribArray(2);
-
-    unsigned int diffuseMap;
-    glGenTextures(1, &diffuseMap);
-    glBindTexture(GL_TEXTURE_2D, diffuseMap);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    int width, height, nrChannels;
-    unsigned char *data = stbi_load("container2.png", &width, &height, &nrChannels, 0);
-
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    }
-
-    else {
-        puts("Could not load texture");
-    }
-
-    unsigned int specularMap;
-    glGenTextures(1, &specularMap);
-    glBindTexture(GL_TEXTURE_2D, specularMap);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    
-    width, height, nrChannels;
-    data = stbi_load("container2_specular.png", &width, &height, &nrChannels, 0);
-
-    if (data) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-    }
-
-    else {
-        puts("Could not load texture");
-    }
-
-    stbi_image_free(data);
 
     glEnable(GL_DEPTH_TEST);
     
@@ -284,52 +228,14 @@ int main(int argc, char** argv) {
         projection = glm::perspective(glm::radians(45.0f), screenWidth/screenHeight, 0.1f, 100.0f);
 
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
-        
-        glBindVertexArray(lightVAO);
-
-        lightCube.use();
-        lightCube.setVec3("lightColor", sin(glfwGetTime() * 2.0f), sin(glfwGetTime() * 0.7f), sin(glfwGetTime() * 1.3f));
 
         lighting.use();
-        lighting.setVec3("material.ambient", 1.0f, 0.5f, 0.31f);
-        lighting.setInt("material.diffuse", 0);
-        lighting.setInt("material.specular", 1);
-        lighting.setFloat("material.shininess", 32.0f);
-        lighting.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
-        lighting.setVec3("light.diffuse", 0.5f, 0.5f, 0.5f);
-        lighting.setVec3("light.ambient", 0.2f, 0.2f, 0.2f);
         lighting.setVec4("light.pos", glm::vec4(lightCubePos, 1.0f));
         lighting.setVec3("cameraPos", camera.cameraPos);
         lighting.setMat4("view", view);
         lighting.setMat4("projection", projection);
-        
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
 
-        for (int i = 0; i < sizeof(cubePositions) / sizeof(glm::vec3); i++) {
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            model = glm::rotate(model, glm::radians(20.0f * i), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            lighting.setMat4("model", model);
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
-
-        lightCube.use();
-        lightCube.setMat4("view", view);
-        lightCube.setMat4("projection", projection);
-
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, lightCubePos);
-        model = glm::scale(model, glm::vec3(0.2f));
-
-        lightCube.setMat4("model", model);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-        //glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(unsigned int), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
         
         glfwSwapBuffers(window);
         glfwPollEvents();

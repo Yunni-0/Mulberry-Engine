@@ -11,7 +11,7 @@
 
 class Model {
     public:
-        Model(char *path) {
+        Model(const char *path) {
             loadModel(path);
         }
 
@@ -84,6 +84,8 @@ class Model {
                 std::vector<Texture> specularMaps = loadMaterialTextures(mat, aiTextureType_SPECULAR, "texture_specular");
                 textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
             }
+
+            return Mesh(vertices, indices, textures);
         }
 
         std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
@@ -93,10 +95,22 @@ class Model {
                 Texture texture;
                 aiString name;
                 mat->GetTexture(type, i, &name);
-                texture.ID = TextureFromFile(name.C_Str(), directory.c_str());
-                texture.type = typeName;
-                texture.name = name.C_Str();
-                textures.push_back(texture);
+
+                bool skip = false;
+                for (unsigned int n = 0; n < textures.size(); n++) {
+                    if (strcmp(textures[n].name.data(), name.C_Str()) == 0) {
+                        textures.push_back(textures[n]);
+                        skip = true;
+                        break;
+                    }
+                }
+
+                if (!skip) {
+                    texture.ID = TextureFromFile(name.C_Str(), directory.c_str());
+                    texture.type = typeName;
+                    texture.name = name.C_Str();
+                    textures.push_back(texture);
+                }
             }
 
             return textures;
