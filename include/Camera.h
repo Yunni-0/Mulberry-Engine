@@ -10,9 +10,9 @@ public:
     glm::vec3 cameraRight = glm::cross(glm::vec3(0.0f, 1.0f, 0.0f), cameraFront);
     glm::vec3 cameraUp = glm::cross(cameraFront, cameraRight);
     glm::vec3 cameraSpeed = glm::vec3(0.0f);
-    float topSpeed = 20.0f;
-    float acceleration = 5.0f;
-    float deceleration = 2.5f;
+    float topSpeed = 100.0f;
+    float acceleration = 20.0f;
+    float deceleration = 15.0f;
     double lastCursorX = 400.0;
     double lastCursorY = 400.0;
     float pitch = 0.0f;

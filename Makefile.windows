@@ -1,2 +1,2 @@
 main: main.cpp
-	g++ -L. -lglfw3 -lopenGL32 -lassimp-vc143-mtd -I./include -o main.exe glad.c include/stbInit.cpp main.cpp
+	g++ -L. -lglfw3 -lopenGL32 -lassimp-5 -I./include -o main.exe glad.c include/stbInit.cpp main.cpp

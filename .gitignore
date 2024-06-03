@@ -2,3 +2,6 @@ main
 main.exe
 build/*
 dist/*
+Models/Test.fbx
+assimp-vc143-mtd.dll
+Open3d (1).max

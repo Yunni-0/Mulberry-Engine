@@ -199,7 +199,7 @@ int main(int argc, char** argv) {
     
     Shader lighting("shader.vert", "lighting.frag");
 
-    Model model("Mulberry.fbx");
+    Model model("Models/Test.glb", glm::vec3(0.0f), glm::vec4(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(0.05f));
 
     glViewport(0, 0, 800, 800);
     
@@ -225,17 +225,20 @@ int main(int argc, char** argv) {
         view = glm::lookAt(camera.cameraPos, camera.cameraPos + camera.cameraFront, camera.cameraUp);
         
         glm::mat4 projection = glm::mat4(1.0f);
-        projection = glm::perspective(glm::radians(45.0f), screenWidth/screenHeight, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(45.0f), screenWidth/screenHeight, 0.1f, 10000.0f);
 
         glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
 
         lighting.use();
-        lighting.setVec4("light.pos", glm::vec4(lightCubePos, 1.0f));
+        lighting.setVec4("light.pos", glm::vec4(lightCubePos, 0.0f));
+        lighting.setVec3("light.diffuse", glm::vec3(1.0, 1.0, 1.0));
+        lighting.setVec3("light.specular", glm::vec3(1.0, 1.0, 1.0));
+        lighting.setVec3("light.ambient", glm::vec3(0.2, 0.2, 0.2));
         lighting.setVec3("cameraPos", camera.cameraPos);
         lighting.setMat4("view", view);
         lighting.setMat4("projection", projection);
 
-
+        model.Draw(lighting);
         
         glfwSwapBuffers(window);
         glfwPollEvents();

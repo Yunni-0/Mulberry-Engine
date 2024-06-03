@@ -6,6 +6,7 @@
 #include <vector>
 #include <Shader.h>
 #include <stb_image.h>
+#include <assimp/scene.h>
 
 struct Vertex {
     glm::vec3 pos;
@@ -19,8 +20,8 @@ struct Texture {
     std::string name;
 };
 
-unsigned int TextureFromFile(const char *fileName, const char *directory) {
-    std::string path = std::string(fileName) + std::string(directory);
+unsigned int TextureFromFile(const aiScene *scene, const char *fileName, const char *directory) {
+    std::string path = std::string(directory).append("/") + std::string(fileName);
     
     unsigned int tex;
     glGenTextures(1, &tex);
@@ -32,7 +33,12 @@ unsigned int TextureFromFile(const char *fileName, const char *directory) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     int width, height, nrChannels;
-    unsigned char *data = stbi_load(path.c_str(), &width, &height, &nrChannels, 0);
+
+    const unsigned char *data = reinterpret_cast<const unsigned char*>(scene->GetEmbeddedTexture(fileName)->pcData);
+
+    if (scene->GetEmbeddedTexture(fileName)->mHeight == 0) {
+        data = stbi_load_from_memory(reinterpret_cast<unsigned char*>(scene->GetEmbeddedTexture(fileName)->pcData), scene->GetEmbeddedTexture(fileName)->mWidth, &width, &height, &nrChannels, 0);
+    }
 
     int format;
     if (nrChannels == 1) {
@@ -45,16 +51,13 @@ unsigned int TextureFromFile(const char *fileName, const char *directory) {
         format = GL_RGBA;
     }
     else {
-        printf("Could not load texture %s since it has an unusual amount of channels", path);
+        printf("Could not load texture %s since it has %i channels\n", path.c_str(), nrChannels);
         return tex;
     }
 
     if (data) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
         glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-    }
-
-    else {
-        printf("Could not load texture %s", path);
     }
 
     return tex;
@@ -74,7 +77,8 @@ class Mesh {
             setupMesh();
         }
 
-        void Draw (Shader &shader) {
+        void Draw (Shader &shader, glm::mat4 modelMat) {
+            shader.use();
             unsigned int numDiffuse = 1;
             unsigned int numSpecular = 1;
 
@@ -90,15 +94,18 @@ class Mesh {
                     num = std::to_string(numSpecular++);
                 }
 
-                shader.setInt(("material." + name + num).c_str(), i);
+                shader.setFloat((name + num).c_str(), i);
                 glBindTexture(GL_TEXTURE_2D, textures[i].ID);
             }
 
-            glActiveTexture(GL_TEXTURE0);
+            shader.setMat4("model", modelMat);
 
             glBindVertexArray(VAO);
-            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+            //glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+            glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices.size()), GL_UNSIGNED_INT, 0);
             glBindVertexArray(0);
+
+            glActiveTexture(GL_TEXTURE0);
         }
 
     private:

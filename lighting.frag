@@ -35,14 +35,14 @@ void main () {
     }
 
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuseLight = (diff * vec3(texture(material.diffuse, texCoord))) * light.diffuse;
+    vec3 diffuseLight = (diff * vec3(texture(texture_diffuse1, texCoord))) * light.diffuse;
 
     vec3 viewDir = normalize(cameraPos - pos);
     vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    vec3 specularLight = (vec3(texture(material.specular, texCoord)) * spec) * light.specular;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+    vec3 specularLight = (vec3(texture(texture_specular1, texCoord)) * spec) * light.specular;
 
-    vec3 ambientLight = light.ambient * vec3(texture(material.diffuse, texCoord));
+    vec3 ambientLight = light.ambient * vec3(texture(texture_diffuse1, texCoord));
 
     vec3 result = (ambientLight + diffuseLight + specularLight) * attenuation;
     fragmentColor = vec4(result, 1.0);
